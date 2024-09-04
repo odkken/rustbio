@@ -19,14 +19,14 @@ struct DecodedGene {
     sink: SinkType,
     weight: f32,
 }
-
+//add the clone trait
+#[derive(Clone, Copy)]
 pub struct Organism<
     const NUM_GENES: usize,
     const NUM_NEURONS: usize,
     const NUM_INPUTS: usize,
     const NUM_OUTPUTS: usize,
 > {
-    pub genome: [u32; NUM_GENES],
     pub neurons: [f32; NUM_NEURONS],
     pub inputs: [f32; NUM_INPUTS],
     pub outputs: [f32; NUM_OUTPUTS],
@@ -44,7 +44,8 @@ impl<
         const NUM_OUTPUTS: usize,
     > Organism<NUM_GENES, NUM_NEURONS, NUM_INPUTS, NUM_OUTPUTS>
 {
-    pub fn new() -> Self {
+    pub fn new<R: Rng>(rng: &mut R) -> Self {
+        let genome: [u32; NUM_GENES] = array::from_fn(|_| rng.gen());
         let mut rng = rand::thread_rng();
         let genome: [u32; NUM_GENES] = array::from_fn(|_| rng.gen());
         let neurons = [0.0; NUM_NEURONS];
@@ -54,7 +55,6 @@ impl<
         let decoded_genes = Self::decode_genes(&genome);
 
         Self {
-            genome,
             neurons,
             inputs,
             outputs,
@@ -109,12 +109,11 @@ impl<
             }
         }
 
-        // Apply updates and activation function
-        // for (neuron, update) in self.neurons.iter_mut().zip(neuron_updates.iter()) {
-        //     *neuron = sigmoid(*neuron + *update);
-        // }
-        // for (output, update) in self.outputs.iter_mut().zip(output_updates.iter()) {
-        //     *output = sigmoid(*output + *update);
-        // }
+        for (neuron, update) in self.neurons.iter_mut().zip(neuron_updates.iter()) {
+            *neuron = sigmoid(*neuron + *update);
+        }
+        for (output, update) in self.outputs.iter_mut().zip(output_updates.iter()) {
+            *output = sigmoid(*output + *update);
+        }
     }
 }
